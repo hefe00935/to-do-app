@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Streaks — Daily To‑Do</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <button id="menuBtn" aria-label="menu">☰</button>
+      <div id="dateLabel" class="date">--</div>
+      <div id="streakBadge" class="streak" title="Current streak">🔥 0</div>
+    </header>
+
+    <!-- HOME VIEW -->
+    <main id="viewHome" class="container view">
+      <section class="progress-card">
+        <div id="progressRing" class="progress-ring" aria-hidden="true"></div>
+        <div class="progress-text"><span id="progressCount">0</span> / <span id="dailyGoal">3</span></div>
+        <div class="streak-line">Current streak: <span id="globalStreak">0</span> days <small id="longest">(Longest: 0)</small></div>
+      </section>
+
+      <section class="tasks" id="tasksList" aria-live="polite"></section>
+
+      <button id="fab" class="fab" title="New task">＋</button>
+    </main>
+
+    <!-- CALENDAR VIEW -->
+    <main id="viewCalendar" class="container view">
+      <div class="calendar-header">
+        <button id="prevMonth">◀</button>
+        <h2 id="monthLabel">November 2025</h2>
+        <button id="nextMonth">▶</button>
+      </div>
+      <div class="calendar-grid" id="calendarGrid"></div>
+      <div class="calendar-legend">
+        <div><span class="dot completed"></span> Completed</div>
+        <div><span class="dot partial"></span> Partial</div>
+        <div><span class="dot missed"></span> Missed</div>
+      </div>
+    </main>
+
+    <!-- STATS VIEW -->
+    <main id="viewStats" class="container view">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Current Streak</div>
+          <div class="stat-value" id="statCurrent">0</div>
+          <div class="stat-unit">days</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Longest Streak</div>
+          <div class="stat-value" id="statLongest">0</div>
+          <div class="stat-unit">days</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Completion %</div>
+          <div class="stat-value" id="statRate">0</div>
+          <div class="stat-unit">this month</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Avg / Day</div>
+          <div class="stat-value" id="statAvg">0</div>
+          <div class="stat-unit">tasks</div>
+        </div>
+      </div>
+
+      <section class="chart-section">
+        <h3>7-Day Completions</h3>
+        <div class="chart" id="chart7d"></div>
+      </section>
+
+      <section class="achievements">
+        <h3>Achievements</h3>
+        <div class="badges" id="badgesContainer"></div>
+      </section>
+    </main>
+
+    <!-- SETTINGS VIEW -->
+    <main id="viewSettings" class="container view">
+      <section class="settings-group">
+        <h3>Profile</h3>
+        <label>Name<input id="settingName" /></label>
+        <label>Timezone<select id="settingTz"><option>UTC</option><option>America/New_York</option><option>Europe/London</option><option>Asia/Tokyo</option></select></label>
+      </section>
+
+      <section class="settings-group">
+        <h3>Goals & Timing</h3>
+        <label>Daily goal<input id="settingGoal" type="number" min="1" max="10" /></label>
+        <label>Day start hour (0-23)<input id="settingDayStart" type="number" min="0" max="23" /></label>
+        <label>Grace window (hours)<input id="settingGrace" type="number" min="0" max="12" value="0" /></label>
+      </section>
+
+      <section class="settings-group">
+        <h3>Appearance</h3>
+        <label><input id="settingDarkMode" type="checkbox" /> Dark mode</label>
+      </section>
+
+      <section class="settings-group">
+        <h3>Data</h3>
+        <button id="clearDataBtn" class="danger">Clear all data</button>
+        <button id="exportDataBtn">Export data</button>
+      </section>
+
+      <div class="row" style="margin-top: 20px;">
+        <button id="saveSettings" class="primary">Save settings</button>
+      </div>
+    </main>
+
+    <nav class="bottom-nav">
+      <button id="navHome" class="active">Home</button>
+      <button id="navCalendar">📅</button>
+      <button id="navStats">📊</button>
+      <button id="navSettings">⚙</button>
+    </nav>
+  </div>
+
+  <!-- Onboarding modal -->
+  <div id="onboard" class="modal hidden">
+    <div class="card">
+      <h2 id="obTitle">Welcome</h2>
+      <p>Let's set up your daily streaks.</p>
+      <label>What's your name?<input id="obName" placeholder="You" /></label>
+      <label>Daily goal (1–10)
+        <input id="obGoal" type="number" min="1" max="10" value="3" />
+      </label>
+      <label>Day start hour (0–23)
+        <input id="obDayStart" type="number" min="0" max="23" value="0" />
+      </label>
+      <label>Grace window (hours, 0-12)
+        <input id="obGrace" type="number" min="0" max="12" value="0" />
+      </label>
+      <div class="chips" id="starterChips">
+        <button class="chip" data-title="Read">📚 Read</button>
+        <button class="chip" data-title="Exercise">💪 Exercise</button>
+        <button class="chip" data-title="Meditate">🧘 Meditate</button>
+        <button class="chip" data-title="Journal">✍️ Journal</button>
+        <button class="chip" data-title="Sleep early">😴 Sleep early</button>
+      </div>
+      <div class="row">
+        <button id="startBtn" class="primary">Start streaking</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Task modal -->
+  <div id="taskModal" class="modal hidden">
+    <div class="card">
+      <h3 id="taskModalTitle">New Task</h3>
+      <label>Title<input id="taskTitle" /></label>
+      <label>Description<textarea id="taskDesc" placeholder="Why does this matter to you?"></textarea></label>
+      <label>Recurrence<select id="taskRec">
+        <option value="daily">Daily</option>
+        <option value="weekly">Weekly</option>
+        <option value="none">One-time</option>
+      </select></label>
+      <label>Time window (optional)
+        <div style="display:flex; gap:8px;">
+          <input id="taskStart" type="time" placeholder="Start" />
+          <input id="taskEnd" type="time" placeholder="End" />
+        </div>
+      </label>
+      <div class="row">
+        <button id="saveTask" class="primary">Save</button>
+        <button id="deleteTask" class="danger" style="display:none;">Delete</button>
+        <button id="closeTask">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Day detail modal (for calendar) -->
+  <div id="dayModal" class="modal hidden">
+    <div class="card">
+      <h3 id="dayModalDate">Nov 19</h3>
+      <div id="dayModalTasks"></div>
+      <div class="row">
+        <button id="closeDayModal">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Snackbar / Undo -->
+  <div id="snackbar" class="snackbar hidden"></div>
+
+  <!-- Canvas for particle effects -->
+  <canvas id="canvas" style="position: fixed; top: 0; left: 0; pointer-events: none;"></canvas>
+
+  <script src="app.js"></script>
+</body>
+</html>
